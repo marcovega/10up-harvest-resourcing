@@ -1,9 +1,11 @@
 // ==UserScript==
 // @name         10up Live Resourcing
 // @namespace    https://10up.com/
-// @version      0.1
+// @version      0.2
 // @description  making resourcing timelogging easier for devs
 // @author       Marco Vega
+// @downloadURL  https://raw.githubusercontent.com/marcovega/10up-harvest-resourcing/main/index.js
+// @updateURL    https://raw.githubusercontent.com/marcovega/10up-harvest-resourcing/main/index.js
 // @match        https://10up.harvestapp.com/time/week*
 // @match        https://dashboard.10up.com/blog/10upper*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=10up.com
