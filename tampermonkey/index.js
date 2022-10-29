@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         10up Harvest Resourcing
 // @namespace    https://10up.com/
-// @version      0.3
+// @version      0.4
 // @description  making resourcing timelogging easier for devs
 // @author       Marco Vega
 // @downloadURL  https://raw.githubusercontent.com/marcovega/10up-harvest-resourcing/main/index.js

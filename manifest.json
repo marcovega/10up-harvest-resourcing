@@ -1,0 +1,38 @@
+{
+  "name": "10up Harvest Resourcing",
+  "version": "0.4.0",
+  "manifest_version": 2,
+  "description": "Making resourcing timelogging easier for the 10up team",
+  "homepage_url": "https://github.com/marcovega/10up-harvest-resourcing",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "default_locale": "en",
+  "permissions": [
+    "storage",
+    "https://10up.harvestapp.com/time/week*",
+    "https://dashboard.10up.com/blog/10upper*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://10up.harvestapp.com/time/week*",
+        "https://dashboard.10up.com/blog/10upper*"
+      ],
+      "css": [
+        "src/inject/inject.css"
+      ]
+    },
+    {
+      "matches": [
+        "https://10up.harvestapp.com/time/week*",
+        "https://dashboard.10up.com/blog/10upper*"
+      ],
+      "js": [
+        "src/inject/inject.js"
+      ]
+    }
+  ]
+}
