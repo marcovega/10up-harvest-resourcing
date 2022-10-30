@@ -1,5 +1,7 @@
 // Made with ❤️ and ☕ in Colombia.
 
+let renderRunning = false;
+
 /**
  * Retrieve object from Chrome's Local StorageArea
  * @param {string} key 
@@ -134,7 +136,7 @@ async function onDrop(e) {
 
 	await saveObjectInLocalStorage( { tenupRelationships: JSON.stringify(relationships) } );
 
-    buildResources();
+    await buildResources();
 };
 
 async function resetItems(e) {
@@ -148,8 +150,8 @@ async function resetItems(e) {
     }
 
     await saveObjectInLocalStorage( { tenupRelationships: JSON.stringify(relationships) } );
-    buildResources();
-    buildHarvestTasks();
+    await buildResources();
+    await buildHarvestTasks();
 }
 
 function makeHtml(templateString) {
@@ -173,11 +175,11 @@ function template() {
 async function resourcingTemplate({resourcing_id, name, hours}) {
     const relationships = JSON.parse(await getObjectFromLocalStorage('tenupRelationships') || "{}");
     const items = relationships[resourcing_id] ? relationships[resourcing_id].length : 0;
-    const totalHoursSpent = items > 0 ? (async () => {
+    const totalHoursSpent = items > 0 ? await (async () => {
         const harvestTime = await getHarvestWeekData(false);
         let hours = 0;
-        relationships[resourcing_id].forEach(async task_id => {
-            harvestTime.forEach(async (time, index) => {
+        relationships[resourcing_id].forEach(task_id => {
+            harvestTime.forEach((time, index) => {
                 if (time.id === task_id) {
                     hours += hoursToDecimal(time.hours);
                 }
@@ -185,10 +187,10 @@ async function resourcingTemplate({resourcing_id, name, hours}) {
         });
         return decimalToHours(hours);
     })() : '0:00';
-    const hoursRemaining = items > 0 ? (async () => {
+    const hoursRemaining = items > 0 ? (() => {
         return decimalToHours( hoursToDecimal(hours) - hoursToDecimal(totalHoursSpent) );
     })() : hours;
-    const progress = items > 0 ? (async () => {
+    const progress = items > 0 ? (() => {
         return ( hoursToDecimal(totalHoursSpent) / hoursToDecimal(hours) ) * 100;
     })() : 0;
     const templateString = `
@@ -291,12 +293,10 @@ async function buildResources() {
     container.innerHTML = '';
     const date = document.querySelector('.day a.test-Monday').getAttribute('href').split('day/')[1].split('/');
     const intDate = new Date(date[0] + '-' + date[1] + '-' + date[2]);
-    const resourcing = await getResourcingData(intDate.getTime() / 100000);
-	if (resourcing) {
-		resourcing.map(async resource => {
-			container.append( await resourcingTemplate(resource) );
-		});
-	}
+    const resourcing = await getResourcingData(intDate.getTime() / 100000 );
+    for (const resource of resourcing) {
+        container.append( await resourcingTemplate(resource) );
+    }
 }
 
 async function buildHarvestTasks() {
@@ -311,13 +311,34 @@ async function buildHarvestTasks() {
 async function harvestMutationCallback(mutationList, observer) {
     for (const mutation of mutationList) {
         if ( mutation.type === 'childList' && ( mutation.target.classList.contains('pds-inline-block') || mutation.target.classList.contains('total') ) ) {
-            await buildResources();
+            if ( ! renderRunning) {
+                renderRunning = true;
+                await buildResources();
+                renderRunning = false;
+            }
         }
     }
-};
+}
 
-chrome.extension.sendMessage({}, async function(response) {
-	var readyStateCheckInterval = setInterval(async function() {
+async function tryDependencies() {
+    const date = document.querySelector(".day a.test-Monday");
+    if ( ! date ) {
+        return 'Try logging your first time for the week to enable the script, and then refresh the window if needed.';
+    }
+
+    const date2 = document.querySelector('.day a.test-Monday').getAttribute('href').split('day/')[1].split('/');
+    const intDate = new Date(date2[0] + '-' + date2[1] + '-' + date2[2]);
+    const resourcing = await getResourcingData(intDate.getTime() / 100000 );
+
+    if ( Object.keys(resourcing).length === 0 ) {
+       return 'No resource fetched. Go to your resourcing page in 10up Dashboard, and visit this same week. Then come here and refresh the window.';
+    }
+
+    return false;
+}
+
+chrome.runtime.sendMessage({}, async function(response) {
+	let readyStateCheckInterval = setInterval(async function() {
 	if (document.readyState === "complete") {
 		clearInterval(readyStateCheckInterval);
 
@@ -336,6 +357,17 @@ chrome.extension.sendMessage({}, async function(response) {
 
 		if ( location.host === '10up.harvestapp.com' ) {
 			buildInterface();
+
+            const errors = await tryDependencies();
+
+            if ( errors !== false ) {
+                const error = document.createElement('div');
+                error.setAttribute('class', 'tenup-error');
+                error.innerHTML = await errors;
+                document.querySelector('#tenup-resourcing-container').append(error);
+                return;
+            }
+
 			await buildResources();
 			await buildHarvestTasks();
 

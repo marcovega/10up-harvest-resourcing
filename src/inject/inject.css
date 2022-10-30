@@ -145,3 +145,13 @@
 .tenup-resource--drag-here > * {
   opacity: 0.3;
 }
+
+.tenup-error {
+  margin: 10px;
+  border: 1px solid red;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 12px;
+  text-align: center;
+  background: rgba(255,0,0,0.05);
+}
