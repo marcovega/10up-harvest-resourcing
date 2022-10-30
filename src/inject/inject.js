@@ -290,6 +290,9 @@ function buildInterface() {
 
 async function buildResources() {
     const container = document.querySelector('#tenup-resourcing-container');
+    if ( ! container ) {
+        return;
+    }
     container.innerHTML = '';
     const date = document.querySelector('.day a.test-Monday').getAttribute('href').split('day/')[1].split('/');
     const intDate = new Date(date[0] + '-' + date[1] + '-' + date[2]);
@@ -301,6 +304,9 @@ async function buildResources() {
 
 async function buildHarvestTasks() {
     const container = document.querySelector('#tenup-unassigned-tasks');
+    if ( ! container ) {
+        return;
+    }
     container.innerHTML = '';
     const loggedTime = await getHarvestWeekData();
     loggedTime.map(task => {
